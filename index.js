@@ -1,9 +1,11 @@
 var express = require("express");
 var body    = require("body/json");
 var _       = require("lodash");
+var q       = require("q");
 var morgan  = require("morgan");
 
-module.exports = function(options, callback) {
+module.exports = function(options) {
+  var deferred = q.defer();
   var app = express();
   app.use(morgan('combined'));
   
@@ -230,15 +232,13 @@ module.exports = function(options, callback) {
       return res.status(204).send();
     });
 
-
   var server = app.listen(port, function() {
-    if (callback) {
-      callback(server);
-    }
+    return deferred.resolve(server);
   });
+  return deferred.promise;
 };
 
-module.exports({
-  port: 3001,
-  collections: ["users", "playlists"],
-});
+// module.exports({
+//   port: 3001,
+//   collections: ["users", "playlists"],
+// });

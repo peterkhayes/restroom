@@ -1,6 +1,7 @@
-var verity = require("verity");
+var _          = require('lodash');
 var EasyServer = require("../index");
-
+var verity     = require("./verity");
+var http       = require("./http");
   // var v;
 
   // beforeEach(function() {
@@ -11,19 +12,6 @@ var EasyServer = require("../index");
 describe("EasyServer", function() {
 
   var server;
-  function init(options, cb) {
-    EasyServer(options, function(created) {
-      server = created;
-      cb(server);
-    });
-  }
-
-  function v(port) {
-    port = port || 3000;
-    var args = Array.prototype.slice.call(arguments, 1);
-    var url = "http://localhost:" + [port].concat(args).join("/");
-    return verity(url);
-  }
 
   afterEach(function() {
     if (server) {
@@ -31,15 +19,27 @@ describe("EasyServer", function() {
     }
   });
 
-  it("initializes on the correct port", function(done) {
-    init({
-      port: 28345, // random port.
+  function saveServer(created) {
+    server = created;
+    return created;
+  }
+
+  it("initializes on the correct port", function() {
+    var p = EasyServer({
+      port: 1234,
       collections: ["users"]
-    }, function() {
-      v(28345, "users")
-        .expectStatus(200)
-        .test(done);
+    })
+    .then(saveServer)
+    .then(function() {
+      return verity(28345, "users").expectStatus(200).test();
+    })
+    .fail(function(err) {
+      console.log("err", err);
+      done(err);
     });
+
+    console.log(Object.keys(p));
+    return p.promise;
   });
 
   // TODO: Use promises for this stuff to get more familiar with them.
