@@ -1,7 +1,7 @@
 {
   "name": "EasyServer",
-  "version": "0.0.0",
-  "description": "",
+  "version": "0.1.0",
+  "description": "One-line RESTful CRUD server in Express",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,6 +12,8 @@
     "express": "~4.11.2",
     "body": "~5.0.0",
     "lodash": "~3.2.0",
+    "verity": "0.5.1",
+    "mocha": "1.13.0",
     "morgan": "~1.5.1"
   }
 }

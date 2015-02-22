@@ -3,7 +3,7 @@ var body    = require("body/json");
 var _       = require("lodash");
 var morgan  = require("morgan");
 
-module.exports = function(options) {
+module.exports = function(options, callback) {
   var app = express();
   app.use(morgan('combined'));
   
@@ -15,18 +15,32 @@ module.exports = function(options) {
   var port = options.port || 3000;
   var idField = options.idField || "id";
   var collections = options.collections;
+  var auth = options.auth || false;
 
   /*
     Set up storage collections.
   */
 
   var storage = {};
-  if (!collections) {
+  if (!_.isArray(collections) || collections.length === 0) {
     throw new Error("Must pass an array of collection names as `options.collections`");
   }
   collections.forEach(function(collection) {
     storage[collection] = [];
   });
+  var associations = [];
+
+  /*
+    Set up authentication, if desired.
+  */
+  
+  if (auth) {
+    if (_.contains(collections, "session")) {
+      throw new Error("Cannot use a session collection if using built-in auth feature");
+    }
+
+    // TODO: finish
+  }
 
   /*
     Helper functions
@@ -43,14 +57,44 @@ module.exports = function(options) {
     res.status(status).send({error: msg});
   }
 
+  function setAssociation(type1, id1, type2, id2) {
+    var obj = {};
+    obj[type1] = id1;
+    obj[type2] = id2;
+    associations.push(obj);
+  }
+
+  function getAssociations(type1, id1, type2) {
+    return associations.filter(function(a) {
+      return a[type1] === id1 && a[type2] !== undefined;
+    });
+  }
+
+  function removeAssociation(type1, id1, type2, id2) {
+    if (id2) {
+      associations = associations.filter(function(a) {
+        return !(a[type1] === id1 && a[type2] === id2);
+      });
+    } else {
+      associations = associations.filter(function(a) {
+        return !(a[type1] === id1 && a[type2] !== undefined);
+      });
+    }
+  }
+
   /*
     Middleware to error on invalid collections.
   */
 
   function ensureCollection(req, res, next) {
     var collection = req.params.collection;
+    var collection2 = req.params.collection2;
     if (!storage[collection]) {
       return sendError(res, 400, "Unknown collection:", collection);
+    } else if (collection2 && !storage[collection2]) {
+      return sendError(res, 400, "Unknown collection:", collection2);
+    } else if (collection === collection2) {
+      return sendError(res, 400, "Cannot associate a collection with itself");
     }
     next();
   }
@@ -68,7 +112,7 @@ module.exports = function(options) {
 
     var fetched = findById(collection, id);
     if (!fetched) {
-      return sendError(res, 404, "Document not found with identifier:", idField, "/", id);
+      return sendError(res, 404, "Document not found with collection and identifier:", collection, "/", id);
     }
     req.fetched = fetched;
     next();
@@ -117,10 +161,10 @@ module.exports = function(options) {
   app.route("/:collection/:id")
     .all(ensureCollection)
     .all(fetchItem)
-    .put(parseBody)
     .get(function(req, res) {
       return res.json(req.fetched);
     })
+    .put(parseBody)
     .put(function(req, res) {
       delete req.body[idField];
       _.extend(req.fetched, req.body);
@@ -135,12 +179,66 @@ module.exports = function(options) {
       return res.status(204).send();
     });
 
+  app.route("/:collection/:id/:collection2")
+    .all(ensureCollection)
+    .all(fetchItem)
+    .get(function(req, res) {
+      var id = req.params.id;
+      var collection = req.params.collection;
+      var collection2 = req.params.collection2;
+      var associations = getAssociations(collection, id, collection2);
+      var found = associations.map(function(a) {
+        return findById(collection2, a[collection2]);
+      });
+      return res.json(found);
+    })
+    .post(parseBody)
+    .post(function(req, res) {
+      var id = req.params.id;
+      var id2 = req.body[idField];
+      var collection = req.params.collection;
+      var collection2 = req.params.collection2;
+      if (!id) {
+        return sendError(res, 400, "Identifier not provided:", idField);
+      }
+      if (!findById(collection2, id2)) {
+        return sendError(res, 404, "Document not found with collection and identifier:", collection2, "/", id2);
+      }
+      setAssociation(collection, id, collection2, id2);
+      return res.status(204).send();
+    })
+    .delete(function(req, res) {
+      var id = req.params.id;
+      var collection = req.params.collection;
+      var collection2 = req.params.collection2;
+      removeAssociation(collection, id, collection2);
+      return res.status(204).send();
+    });
+
+  app.route("/:collection/:id/:collection2/:id2")
+    .all(ensureCollection)
+    .all(fetchItem)
+    .delete(function(req, res) {
+      var id = req.params.id;
+      var id2 = req.params.id2;
+      var collection = req.params.collection;
+      var collection2 = req.params.collection2;
+      if (!findById(collection2, id2)) {
+        return sendError(res, 404, "Document not found with collection and identifier:", collection2, "/", id2);
+      }
+      removeAssociation(collection, id, collection2, id2);
+      return res.status(204).send();
+    });
+
+
   var server = app.listen(port, function() {
-    console.log("Basic server listening on port", port);
+    if (callback) {
+      callback(server);
+    }
   });
 };
 
 module.exports({
   port: 3001,
-  collections: ["users", "playlists"]
+  collections: ["users", "playlists"],
 });
