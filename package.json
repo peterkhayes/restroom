@@ -1,13 +1,20 @@
 {
   "name": "restroom",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "One-line RESTful CRUD server in Express",
   "main": "index.js",
   "scripts": {
     "test": "mocha ./test --recursive -R spec"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peterkhayes/restroom"
+  },
   "author": "Peter Hayes <peter.k.hayes@gmail.com> (http://peterkhayes.com/)",
   "license": "BSD-2-Clause",
+  "keywords": [
+    "REST", "express", "server", "easy", "simple", "CRUD", "one", "line", "RESTful", "prototype"
+  ],
   "dependencies": {
     "express": "~4.11.2",
     "body": "~5.0.0",
