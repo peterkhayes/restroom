@@ -4,6 +4,8 @@ var _       = require("lodash");
 var q       = require("q");
 var morgan  = require("morgan");
 
+var Models = require("./models");
+
 module.exports = function(options) {
   var deferred = q.defer();
   var app = express();
@@ -18,19 +20,13 @@ module.exports = function(options) {
   var idField = options.idField || "id";
   var collections = options.collections;
   var auth = options.auth || false;
+  var callback = options.callback || function() {};
 
   /*
-    Set up storage collections.
+    Set up models.
   */
 
-  var storage = {};
-  if (!_.isArray(collections) || collections.length === 0) {
-    throw new Error("Must pass an array of collection names as `options.collections`");
-  }
-  collections.forEach(function(collection) {
-    storage[collection] = [];
-  });
-  var associations = [];
+  var models = Models(collections, idField);
 
   /*
     Set up authentication, if desired.
@@ -44,44 +40,14 @@ module.exports = function(options) {
     // TODO: finish
   }
 
+
   /*
     Helper functions
   */
 
-  function findById(collection, id) {
-    var query = {};
-    query[idField] = id;
-    return _.findWhere(storage[collection], query);
-  }
-
   function sendError(res, status) {
     var msg = Array.prototype.slice.call(arguments, 2).join(" ");
     res.status(status).send({error: msg});
-  }
-
-  function setAssociation(type1, id1, type2, id2) {
-    var obj = {};
-    obj[type1] = id1;
-    obj[type2] = id2;
-    associations.push(obj);
-  }
-
-  function getAssociations(type1, id1, type2) {
-    return associations.filter(function(a) {
-      return a[type1] === id1 && a[type2] !== undefined;
-    });
-  }
-
-  function removeAssociation(type1, id1, type2, id2) {
-    if (id2) {
-      associations = associations.filter(function(a) {
-        return !(a[type1] === id1 && a[type2] === id2);
-      });
-    } else {
-      associations = associations.filter(function(a) {
-        return !(a[type1] === id1 && a[type2] !== undefined);
-      });
-    }
   }
 
   /*
@@ -91,9 +57,9 @@ module.exports = function(options) {
   function ensureCollection(req, res, next) {
     var collection = req.params.collection;
     var collection2 = req.params.collection2;
-    if (!storage[collection]) {
+    if (!models.exists(collection)) {
       return sendError(res, 400, "Unknown collection:", collection);
-    } else if (collection2 && !storage[collection2]) {
+    } else if (collection2 && !models.exists(collection2)) {
       return sendError(res, 400, "Unknown collection:", collection2);
     } else if (collection === collection2) {
       return sendError(res, 400, "Cannot associate a collection with itself");
@@ -108,11 +74,8 @@ module.exports = function(options) {
   function fetchItem(req, res, next) {
     var collection = req.params.collection;
     var id = req.params.id;
-    if (!id) {
-      return next();
-    }
 
-    var fetched = findById(collection, id);
+    var fetched = models.find(collection, id);
     if (!fetched) {
       return sendError(res, 404, "Document not found with collection and identifier:", collection, "/", id);
     }
@@ -142,22 +105,17 @@ module.exports = function(options) {
     .all(ensureCollection)
     .get(function(req, res) {
       var collection = req.params.collection;
-      return res.json(storage[collection]);
+      return res.json(models.getAll(collection));
     })
     .post(parseBody)
     .post(function(req, res) {
       var collection = req.params.collection;
       var id = req.body[idField];
-      if (!id) {
-        return sendError(res, 400, "Identifier not provided:", idField);
+      var output = models.create(collection, data);
+      if (!output) {
+        return sendError(res, 400, "Duplicated identifier:", id);
       }
-      
-      if (findById(collection, id)) {
-        return sendError(res, 400, "Duplicated identifier:", idField, "/", id);
-      }
-      
-      storage[collection].push(req.body);
-      return res.status(201).json(req.body);
+      return res.status(201).json(output);
     });
 
   app.route("/:collection/:id")
@@ -168,16 +126,13 @@ module.exports = function(options) {
     })
     .put(parseBody)
     .put(function(req, res) {
-      delete req.body[idField];
-      _.extend(req.fetched, req.body);
-      return res.json(req.fetched);
+      update(collection, id, newData);
+      return res.json(result);
     })
     .delete(function(req, res) {
       var collection = req.params.collection;
       var id = req.params.id;
-      storage[collection] = storage[collection].filter(function(item) {
-        return item[idField] != id;
-      });
+      models.destroy(collection, id);
       return res.status(204).send();
     });
 
@@ -188,11 +143,8 @@ module.exports = function(options) {
       var id = req.params.id;
       var collection = req.params.collection;
       var collection2 = req.params.collection2;
-      var associations = getAssociations(collection, id, collection2);
-      var found = associations.map(function(a) {
-        return findById(collection2, a[collection2]);
-      });
-      return res.json(found);
+      var items = models.findByAssociation(collection, id, collection2);
+      return res.json(items);
     })
     .post(parseBody)
     .post(function(req, res) {
@@ -200,20 +152,22 @@ module.exports = function(options) {
       var id2 = req.body[idField];
       var collection = req.params.collection;
       var collection2 = req.params.collection2;
-      if (!id) {
+      if (!id2) {
         return sendError(res, 400, "Identifier not provided:", idField);
       }
-      if (!findById(collection2, id2)) {
+
+      var success = models.setAssociation(collection, id, collection2, id2);
+      if (success) {
+        return res.status(204).send();
+      } else {
         return sendError(res, 404, "Document not found with collection and identifier:", collection2, "/", id2);
       }
-      setAssociation(collection, id, collection2, id2);
-      return res.status(204).send();
     })
     .delete(function(req, res) {
       var id = req.params.id;
       var collection = req.params.collection;
       var collection2 = req.params.collection2;
-      removeAssociation(collection, id, collection2);
+      models.removeAssociation(collection, id, collection2);
       return res.status(204).send();
     });
 
@@ -225,15 +179,27 @@ module.exports = function(options) {
       var id2 = req.params.id2;
       var collection = req.params.collection;
       var collection2 = req.params.collection2;
-      if (!findById(collection2, id2)) {
+      
+      var success = models.removeAssociation(collection, id, collection2, id2);
+      if (success) {
+        return res.status(204).send();
+      } else {
         return sendError(res, 404, "Document not found with collection and identifier:", collection2, "/", id2);
       }
-      removeAssociation(collection, id, collection2, id2);
-      return res.status(204).send();
     });
 
   var server = app.listen(port, function() {
-    return deferred.resolve(server);
+    // Allow both promise and callback return style.
+    var output = {
+      server: server,
+      app: app,
+      models: models
+    };
+    
+    callback(output);
+    deferred.resolve({
+      server: server, app: app
+    });
   });
   return deferred.promise;
 };

@@ -1,10 +1,10 @@
 {
-  "name": "EasyServer",
+  "name": "restroom",
   "version": "0.1.0",
   "description": "One-line RESTful CRUD server in Express",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha ./test --recursive -R spec"
   },
   "author": "Peter Hayes <peter.k.hayes@gmail.com> (http://peterkhayes.com/)",
   "license": "BSD-2-Clause",
@@ -13,11 +13,11 @@
     "body": "~5.0.0",
     "lodash": "~3.2.0",
     "morgan": "~1.5.1",
-    "q": "~1.2.0"
+    "q": "~1.2.0",
+    "expect.js": "~0.3.1"
   },
   "devDependencies": {
     "verity": "0.5.1",
-    "mocha": "~1.21.5",
-    "superagent": "~0.21.0"
+    "mocha": "~1.21.5"
   }
 }
