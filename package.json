@@ -1,6 +1,6 @@
 {
   "name": "restroom",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "One-line RESTful CRUD server in Express",
   "main": "index.js",
   "scripts": {
