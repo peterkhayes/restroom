@@ -1,15 +1,15 @@
 var express = require("express");
 var body    = require("body/json");
 var _       = require("lodash");
-var q       = require("q");
 var morgan  = require("morgan");
 
 var Models = require("./models");
 
-module.exports = function(options) {
-  var deferred = q.defer();
+module.exports = function(options, callback) {
   var app = express();
-  app.use(morgan('combined'));
+  if (!options.noLog) {
+    app.use(morgan('combined'));
+  }
   
   /*
     Options and configuration.
@@ -20,7 +20,8 @@ module.exports = function(options) {
   var idField = options.idField || "id";
   var collections = options.collections;
   var auth = options.auth || false;
-  var callback = options.callback || function() {};
+  
+  callback = callback || function() {};
 
   /*
     Set up models.
@@ -61,8 +62,6 @@ module.exports = function(options) {
       return sendError(res, 400, "Unknown collection:", collection);
     } else if (collection2 && !models.exists(collection2)) {
       return sendError(res, 400, "Unknown collection:", collection2);
-    } else if (collection === collection2) {
-      return sendError(res, 400, "Cannot associate a collection with itself");
     }
     next();
   }
@@ -105,15 +104,14 @@ module.exports = function(options) {
     .all(ensureCollection)
     .get(function(req, res) {
       var collection = req.params.collection;
-      return res.json(models.getAll(collection));
+      return res.json(models.find(collection));
     })
     .post(parseBody)
     .post(function(req, res) {
       var collection = req.params.collection;
-      var id = req.body[idField];
-      var output = models.create(collection, data);
+      var output = models.create(collection, req.body);
       if (!output) {
-        return sendError(res, 400, "Duplicated identifier:", id);
+        return sendError(res, 400, "Duplicated identifier:", req.body.id);
       }
       return res.status(201).json(output);
     });
@@ -126,7 +124,7 @@ module.exports = function(options) {
     })
     .put(parseBody)
     .put(function(req, res) {
-      update(collection, id, newData);
+      var result = models.update(collection, id, newData);
       return res.json(result);
     })
     .delete(function(req, res) {
@@ -189,19 +187,8 @@ module.exports = function(options) {
     });
 
   var server = app.listen(port, function() {
-    // Allow both promise and callback return style.
-    var output = {
-      server: server,
-      app: app,
-      models: models
-    };
-    
-    callback(output);
-    deferred.resolve({
-      server: server, app: app
-    });
+    callback(server, app, models);
   });
-  return deferred.promise;
 };
 
 // module.exports({

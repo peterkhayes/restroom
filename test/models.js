@@ -60,8 +60,11 @@ describe("Models", function() {
     });
   });
 
-  describe("#findAll", function() {
-    it("returns an array of all items in collection", function() {
+  describe("#find", function() {
+  });
+
+  describe("#find", function() {
+    it("returns an array of all items in collection if no item is given", function() {
       var tiger1 = {name: "Tony"};
       var tiger2 = {name: "Tigger"};
       var tiger3 = {name: "Shere Khan"};
@@ -69,12 +72,10 @@ describe("Models", function() {
       models.create("tigers", tiger2);
       models.create("tigers", tiger3);
 
-      expect(models.findAll("tigers")).to.eql([tiger1, tiger2, tiger3]);
-      expect(models.findAll("llamas")).to.eql([]);
+      expect(models.find("tigers")).to.eql([tiger1, tiger2, tiger3]);
+      expect(models.find("llamas")).to.eql([]);
     });
-  });
 
-  describe("#find", function() {
     it("returns item with matching id", function() {
       var tiger = {name: "Tony", id: "1"};
       models.create("tigers", tiger);
@@ -85,12 +86,6 @@ describe("Models", function() {
       var tiger = {name: "Tony", id: "1"};
       models.create("tigers", tiger);
       expect(models.find("tigers", "2")).to.be(null);
-    });
-
-    it("returns null if no id is passed", function() {
-      var tiger = {name: "Tony", id: "1"};
-      models.create("tigers", tiger);
-      expect(models.find("tigers")).to.be(null);
     });
   });
 
@@ -199,7 +194,7 @@ describe("Models", function() {
       it("returns false if id is not found", function() {
         var result = models.destroy("tigers", llama.id);
         expect(result).to.be(false);
-        expect(models.findAll("tigers")).to.have.length(3);
+        expect(models.find("tigers")).to.have.length(3);
       });
     });
 

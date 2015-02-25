@@ -38,12 +38,10 @@ module.exports = function(collections, idField) {
     return data;
   };
 
-  models.findAll = function(collection) {
-    return storage[collection];
-  };
-
   models.find = function(collection, id) {
-    if (!id) { return null; }
+    if (!id) { 
+      return storage[collection];
+    }
     var query = {};
     query[idField] = id;
     return _.findWhere(storage[collection], query) || null;
