@@ -131,13 +131,13 @@ describe("Models", function() {
 
     /*
       Note: I chose not to test findByAssociation because these tests
-      are implicit in setAssociation and removeAssociation.
+      are implicit in associate and unassociate.
     */
 
-    describe("#setAssociation", function() {
+    describe("#associate", function() {
       it("can set associations between items of different types", function() {
-        var result = models.setAssociation("tigers", tiger.id, "llamas", llama.id);
-        var result2 = models.setAssociation("tigers", tiger.id, "llamas", llama2.id);
+        var result = models.associate("tigers", tiger.id, "llamas", llama.id);
+        var result2 = models.associate("tigers", tiger.id, "llamas", llama2.id);
         expect(result).to.be(true);
         expect(result2).to.be(true);
         var llamas = models.findByAssociation("tigers", tiger.id, "llamas");
@@ -147,8 +147,8 @@ describe("Models", function() {
       });
 
       it("will not double associations between items of different types", function() {
-        models.setAssociation("tigers", tiger.id, "llamas", llama.id);
-        models.setAssociation("tigers", tiger.id, "llamas", llama.id);
+        models.associate("tigers", tiger.id, "llamas", llama.id);
+        models.associate("tigers", tiger.id, "llamas", llama.id);
         var found = models.findByAssociation("tigers", tiger.id, "llamas");
         expect(found).to.eql([llama]);
         var found2 = models.findByAssociation("llamas", llama.id, "tigers");
@@ -156,7 +156,7 @@ describe("Models", function() {
       });
 
       it("can set associations between items of the same type", function() {
-        var result = models.setAssociation("tigers", tiger.id, "tigers", tiger2.id);
+        var result = models.associate("tigers", tiger.id, "tigers", tiger2.id);
         expect(result).to.be(true);
         var found = models.findByAssociation("tigers", tiger.id, "tigers");
         expect(found).to.eql([tiger2]);
@@ -165,8 +165,8 @@ describe("Models", function() {
       });
 
       it("will not double associations between items of the same type", function() {
-        models.setAssociation("tigers", tiger.id, "tigers", tiger2.id);
-        models.setAssociation("tigers", tiger.id, "tigers", tiger2.id);
+        models.associate("tigers", tiger.id, "tigers", tiger2.id);
+        models.associate("tigers", tiger.id, "tigers", tiger2.id);
 
         var found = models.findByAssociation("tigers", tiger.id, "tigers");
         expect(found).to.eql([tiger2]);
@@ -175,10 +175,10 @@ describe("Models", function() {
       });
 
       it("returns false if either model or collection is missing", function() {
-        var result = models.setAssociation("tigers", "missing", "llamas", llama.id);
-        var result2 = models.setAssociation("tigers", tiger.id, "llamas", "missing");
-        var result3 = models.setAssociation("asdf", tiger.id, "llamas", llama.id);
-        var result4 = models.setAssociation("tigers", tiger.id, "asdf", llama.id);
+        var result = models.associate("tigers", "missing", "llamas", llama.id);
+        var result2 = models.associate("tigers", tiger.id, "llamas", "missing");
+        var result3 = models.associate("asdf", tiger.id, "llamas", llama.id);
+        var result4 = models.associate("tigers", tiger.id, "asdf", llama.id);
         expect(result).to.be(false);
         expect(result2).to.be(false);
         expect(result3).to.be(false);
@@ -187,11 +187,58 @@ describe("Models", function() {
     });
     
     describe("#destroy", function() {
-      it("removes item and any associations and returns true");
+      it("removes item and any associations and returns true", function() {
+        models.associate("tigers", tiger.id, "llamas", llama.id);
+        models.associate("tigers", tiger.id, "llamas", llama2.id);
+        var result = models.destroy("tigers", tiger.id);
+        expect(result).to.be(true);
+        expect(models.find("tigers", tiger.id)).to.be(null);
+        expect(models.findByAssociation("llamas", llama.id, "tigers")).to.have.length(0);
+      });
+
+      it("returns false if id is not found", function() {
+        var result = models.destroy("tigers", llama.id);
+        expect(result).to.be(false);
+        expect(models.findAll("tigers")).to.have.length(3);
+      });
     });
 
-    describe("#removeAssociation", function() {
+    describe("#unassociate", function() {
 
+      var donkey;
+
+      beforeEach(function() {
+        donkey = {name: "Eeyore", id: "10"};
+        models.create("donkeys", donkey);
+        models.associate("tigers", tiger.id, "llamas", llama.id);
+        models.associate("tigers", tiger.id, "llamas", llama2.id);
+        models.associate("tigers", tiger.id, "donkeys", donkey.id);
+      });
+
+      it("removes one association with four arguments", function() {
+        models.unassociate("tigers", tiger.id, "llamas", llama.id);
+        var llamas = models.findByAssociation("tigers", tiger.id, "llamas");
+        expect(llamas).to.contain(llama2);
+        expect(llamas).to.not.contain(llama);
+        var donkeys = models.findByAssociation("tigers", tiger.id, "donkeys");
+        expect(donkeys).to.contain(donkey);
+      });
+
+      it("removes all associations of one type with three arguments", function() {
+        models.unassociate("tigers", tiger.id, "llamas");
+        var llamas = models.findByAssociation("tigers", tiger.id, "llamas");
+        expect(llamas).to.have.length(0);
+        var donkeys = models.findByAssociation("tigers", tiger.id, "donkeys");
+        expect(donkeys).to.contain(donkey);
+      });
+
+      it("removes all associations with two arguments", function() {
+        models.unassociate("tigers", tiger.id);
+        var llamas = models.findByAssociation("tigers", tiger.id, "llamas");
+        expect(llamas).to.have.length(0);
+        var donkeys = models.findByAssociation("tigers", tiger.id, "donkeys");
+        expect(donkeys).to.have.length(0);
+      });
     });
   });
 

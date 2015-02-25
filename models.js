@@ -59,7 +59,7 @@ module.exports = function(collections, idField) {
     return item;
   };
 
-  models.setAssociation = function(type1, id1, type2, id2) {
+  models.associate = function(type1, id1, type2, id2) {
     if (!models.find(type1, id1)) return false;
     if (!models.find(type2, id2)) return false;
     
@@ -101,18 +101,18 @@ module.exports = function(collections, idField) {
   };
 
   models.destroy = function(collection, id) {
-    var item = findById(collection);
+    var item = models.find(collection, id);
     if (!item) {
       return false;
     }
     storage[collection] = storage[collection].filter(function(item) {
       return item[idField] !== id;
     });
-    models.removeAssociations(collection, id);
+    models.unassociate(collection, id);
     return true;
   };
 
-  models.removeAssociations = function(type1, id1, type2, id2) {
+  models.unassociate = function(type1, id1, type2, id2) {
     if (id2) {
       if (!models.find(type2, id2)) return false;
       if (type1 !== type2) {
