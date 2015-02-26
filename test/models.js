@@ -61,9 +61,6 @@ describe("Models", function() {
   });
 
   describe("#find", function() {
-  });
-
-  describe("#find", function() {
     it("returns an array of all items in collection if no item is given", function() {
       var tiger1 = {name: "Tony"};
       var tiger2 = {name: "Tigger"};

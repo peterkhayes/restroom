@@ -162,9 +162,6 @@ module.exports = function(options, callback) {
       var id2 = req.params.id2;
       var collection = req.params.collection;
       var collection2 = req.params.collection2;
-      if (!id2) {
-        return sendError(res, 400, "Identifier not provided:", idField);
-      }
 
       var success = models.setAssociation(collection, id, collection2, id2);
       if (success) {
