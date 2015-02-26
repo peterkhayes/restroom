@@ -108,10 +108,18 @@ describe("Models", function() {
     });
 
     describe("#update", function() {
-      it("updates any values (except id) of an item", function() {
-        models.update("tigers", "1", {name: "Baloney", id: "2", sells: "Sandwiches"});
+      it("soft merges new values with old values (except id) if overwrite is false", function() {
+        models.update("tigers", "1", {id: "2", sells: "Sandwiches"}, false);
         expect(models.find("tigers", "1")).to.eql({
-          name: "Baloney",
+          name: "Tony",
+          sells: "Sandwiches",
+          id: "1"
+        });
+      });
+
+      it("hard merges new values with old values (except id) if overwrite is true", function() {
+        models.update("tigers", "1", {id: "2", sells: "Sandwiches"}, true);
+        expect(models.find("tigers", "1")).to.eql({
           sells: "Sandwiches",
           id: "1"
         });

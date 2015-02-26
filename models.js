@@ -47,12 +47,19 @@ module.exports = function(collections, idField) {
     return _.findWhere(storage[collection], query) || null;
   };
 
-  models.update = function(collection, id, newData) {
+  models.update = function(collection, id, newData, overwrite) {
     var item = models.find(collection, id);
     if (!item) {
       return false;
     }
     delete newData[idField];
+    if (overwrite) {
+      Object.keys(item).forEach(function(key) {
+        if (key !== idField) {
+          delete item[key];
+        }
+      });
+    }
     _.extend(item, newData);
     return item;
   };

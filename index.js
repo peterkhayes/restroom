@@ -87,17 +87,13 @@ module.exports = function(options, callback) {
   */
 
   function parseBody(req, res, next) {
-    if (req.method === "POST" || req.method === "PUT") {
-      body(req, res, function(err, body) {
-        if (err) {
-          return sendError(res, 500, "Body parsing error:", (err.message || err));
-        }
-        req.body = body;
-        next();
-      });
-    } else {
+    body(req, res, function(err, body) {
+      if (err) {
+        return sendError(res, 500, "Body parsing error:", (err.message || err));
+      }
+      req.body = body;
       next();
-    }
+    });
   }
 
   app.route("/:collection")
@@ -124,7 +120,12 @@ module.exports = function(options, callback) {
     })
     .put(parseBody)
     .put(function(req, res) {
-      var result = models.update(collection, id, newData);
+      var result = models.update(collection, id, newData, true);
+      return res.json(result);
+    })
+    .patch(parseBody)
+    .patch(function(req, res) {
+      var result = models.update(collection, id, newData, false);
       return res.json(result);
     })
     .delete(function(req, res) {
@@ -144,10 +145,21 @@ module.exports = function(options, callback) {
       var items = models.findByAssociation(collection, id, collection2);
       return res.json(items);
     })
+    .delete(function(req, res) {
+      var id = req.params.id;
+      var collection = req.params.collection;
+      var collection2 = req.params.collection2;
+      models.removeAssociation(collection, id, collection2);
+      return res.status(204).send();
+    });
+
+  app.route("/:collection/:id/:collection2/:id2")
+    .all(ensureCollection)
+    .all(fetchItem)
     .post(parseBody)
     .post(function(req, res) {
-      var id = req.params.id;
-      var id2 = req.body[idField];
+      var id = req.params.id1;
+      var id2 = req.params.id2;
       var collection = req.params.collection;
       var collection2 = req.params.collection2;
       if (!id2) {
@@ -161,17 +173,6 @@ module.exports = function(options, callback) {
         return sendError(res, 404, "Document not found with collection and identifier:", collection2, "/", id2);
       }
     })
-    .delete(function(req, res) {
-      var id = req.params.id;
-      var collection = req.params.collection;
-      var collection2 = req.params.collection2;
-      models.removeAssociation(collection, id, collection2);
-      return res.status(204).send();
-    });
-
-  app.route("/:collection/:id/:collection2/:id2")
-    .all(ensureCollection)
-    .all(fetchItem)
     .delete(function(req, res) {
       var id = req.params.id;
       var id2 = req.params.id2;
