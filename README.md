@@ -20,8 +20,10 @@ Restroom(collections, function(server, app, models) {
   // use this if you want to pre-load some data, for example.
   // see api below.
 });
+```
 
 #### With optional configuration
+```javascript
 Restroom({
   collections: ["leviathans", "encyclopaedias", "grandmothers"],
   port: 1234,
