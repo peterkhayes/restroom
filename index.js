@@ -120,12 +120,16 @@ module.exports = function(options, callback) {
     })
     .put(parseBody)
     .put(function(req, res) {
-      var result = models.update(collection, id, newData, true);
+      var collection = req.params.collection;
+      var id = req.params.id;
+      var result = models.update(collection, id, req.body, true);
       return res.json(result);
     })
     .patch(parseBody)
     .patch(function(req, res) {
-      var result = models.update(collection, id, newData, false);
+      var collection = req.params.collection;
+      var id = req.params.id;
+      var result = models.update(collection, id, req.body, false);
       return res.json(result);
     })
     .delete(function(req, res) {
@@ -149,23 +153,22 @@ module.exports = function(options, callback) {
       var id = req.params.id;
       var collection = req.params.collection;
       var collection2 = req.params.collection2;
-      models.removeAssociation(collection, id, collection2);
+      models.unassociate(collection, id, collection2);
       return res.status(204).send();
     });
 
   app.route("/:collection/:id/:collection2/:id2")
     .all(ensureCollection)
     .all(fetchItem)
-    .post(parseBody)
     .post(function(req, res) {
-      var id = req.params.id1;
+      var id = req.params.id;
       var id2 = req.params.id2;
       var collection = req.params.collection;
       var collection2 = req.params.collection2;
 
-      var success = models.setAssociation(collection, id, collection2, id2);
+      var success = models.associate(collection, id, collection2, id2);
       if (success) {
-        return res.status(204).send();
+        return res.status(200).send();
       } else {
         return sendError(res, 404, "Document not found with collection and identifier:", collection2, "/", id2);
       }
@@ -176,7 +179,7 @@ module.exports = function(options, callback) {
       var collection = req.params.collection;
       var collection2 = req.params.collection2;
       
-      var success = models.removeAssociation(collection, id, collection2, id2);
+      var success = models.unassociate(collection, id, collection2, id2);
       if (success) {
         return res.status(204).send();
       } else {
