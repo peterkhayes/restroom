@@ -7,7 +7,7 @@ _For a quick, clean, and easy backend._
 Restroom lets you spin up fully RESTful HTTP servers with a single command, for use in prototyping, demos, and hackathons.  It provides support for all standard CRUD operations on multiple collections, as well as associations between items.
 
 ## Setup
-####Basic example:
+#### Basic example:
 ```javascript
 var Restroom = require("restroom");
 
@@ -35,7 +35,7 @@ Restroom({
 })
 ```
 
-##API
+## API
 All methods accept and return bodies in JSON form.
 #### GET /collection
 Returns all items in the given collection as an array.

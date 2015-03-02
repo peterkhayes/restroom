@@ -2,11 +2,12 @@ var express = require("express");
 var body    = require("body/json");
 var _       = require("lodash");
 var morgan  = require("morgan");
-
-var Models = require("./models");
+var cors    = require("cors");
+var Models  = require("./models");
 
 module.exports = function(options, callback) {
   var app = express();
+  app.use(cors());
   if (!options.noLog) {
     app.use(morgan('combined'));
   }

@@ -1,6 +1,6 @@
 {
   "name": "restroom",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "One-line RESTful CRUD server in Express",
   "main": "index.js",
   "scripts": {
@@ -13,13 +13,23 @@
   "author": "Peter Hayes <peter.k.hayes@gmail.com> (http://peterkhayes.com/)",
   "license": "BSD-2-Clause",
   "keywords": [
-    "REST", "express", "server", "easy", "simple", "CRUD", "one", "line", "RESTful", "prototype"
+    "REST",
+    "express",
+    "server",
+    "easy",
+    "simple",
+    "CRUD",
+    "one",
+    "line",
+    "RESTful",
+    "prototype"
   ],
   "dependencies": {
     "express": "~4.11.2",
     "body": "~5.0.0",
     "lodash": "~3.2.0",
-    "morgan": "~1.5.1"
+    "morgan": "~1.5.1",
+    "cors": "~2.5.3"
   },
   "devDependencies": {
     "verity": "0.5.1",
