@@ -22,7 +22,7 @@ Restroom(collections, function(server, app, models) {
 });
 ```
 
-#### With optional configuration
+#### With optional configuration:
 ```javascript
 var Restroom = require("restroom");
 Restroom({
@@ -67,5 +67,5 @@ Removes all associations between the item in collection1 with id1 and items in c
 #### DELETE /collection1/id1/collection2/id2
 Removes the association between the item with id1 in collection1 with the item with id2 in collection2.
 
-##Models Object
+## Models Object
 The callback to your server returns a `models` object with a variety of methods to manipulate the data in storage.  You may want to use them if you want, for example, a specific fixture scenario to load each time you restart your app.  See the test suite for documentation.
