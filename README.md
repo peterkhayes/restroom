@@ -26,7 +26,7 @@ Restroom(collections, function(server, app, models) {
 ```javascript
 var Restroom = require("restroom");
 Restroom({
-  collections: ["leviathans", "encyclopaedias", "grandmothers"],
+  collections: ["tigers", "llamas", "donkeys"],
   port: 1234,
   noLog: true,
   idField: "_id" // field used as unique identifier.  default: "id" 
