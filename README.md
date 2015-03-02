@@ -11,9 +11,12 @@ Restroom lets you spin up fully RESTful HTTP servers with a single command, for 
 var Restroom = require("restroom);
 
 Restroom({
-  collections: ["leviathans", "encyclopaedias", "grandmothers"] // required
-  port: 1234 // default: 3000
-  noLog: false // disables server logging. default: false
+  // required:
+  collections: ["leviathans", "encyclopaedias", "grandmothers"],
+  
+  // optional:
+  port: 1234, // default: 3000
+  noLog: false, // disables server logging. default: false
   idField: "_id" // field used as unique identifier.  default: "id" 
 }, function(server, app, models) {
   // you're good to go!
