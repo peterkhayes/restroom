@@ -15,7 +15,9 @@ module.exports = function(options, callback) {
     Options and configuration.
   */
 
-  options = options || {};
+  if (_.isArray(options)) {
+    options = { collections: options };
+  }
   var port = options.port || 3000;
   var idField = options.idField || "id";
   var collections = options.collections;

@@ -7,23 +7,28 @@ _For a quick, clean, and easy backend._
 Restroom lets you spin up fully RESTful HTTP servers with a single command, for use in prototyping, demos, and hackathons.  It provides support for all standard CRUD operations on multiple collections, as well as associations between items.
 
 ## Setup
+####Basic example:
 ```javascript
 var Restroom = require("restroom);
 
-Restroom({
-  // required:
-  collections: ["leviathans", "encyclopaedias", "grandmothers"],
-  
-  // optional:
-  port: 1234, // default: 3000
-  noLog: false, // disables server logging. default: false
-  idField: "_id" // field used as unique identifier.  default: "id" 
-}, function(server, app, models) {
+var collections = ["leviathans", "encyclopaedias", "grandmothers"]
+Restroom(collections, function(server, app, models) {
   // you're good to go!
   // app/server are from express
+  // server is running on port 3000
   // models gives direct access to the models.
   // use this if you want to pre-load some data, for example.
   // see api below.
+});
+
+#### With optional configuration
+Restroom({
+  collections: ["leviathans", "encyclopaedias", "grandmothers"],
+  port: 1234,
+  noLog: true,
+  idField: "_id" // field used as unique identifier.  default: "id" 
+}, function(server, app, models) {
+  // ...
 })
 ```
 
