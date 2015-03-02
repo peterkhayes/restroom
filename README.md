@@ -18,7 +18,7 @@ Restroom(collections, function(server, app, models) {
   // server is running on port 3000
   // models gives direct access to the models.
   // use this if you want to pre-load some data, for example.
-  // see api below.
+  // see below.
 });
 ```
 
