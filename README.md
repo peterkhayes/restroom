@@ -9,7 +9,7 @@ Restroom lets you spin up fully RESTful HTTP servers with a single command, for 
 ## Setup
 ####Basic example:
 ```javascript
-var Restroom = require("restroom);
+var Restroom = require("restroom");
 
 var collections = ["leviathans", "encyclopaedias", "grandmothers"]
 Restroom(collections, function(server, app, models) {
@@ -24,6 +24,7 @@ Restroom(collections, function(server, app, models) {
 
 #### With optional configuration
 ```javascript
+var Restroom = require("restroom");
 Restroom({
   collections: ["leviathans", "encyclopaedias", "grandmothers"],
   port: 1234,
